@@ -424,23 +424,23 @@ function scanHoldings(){
     .filter(function(v,i,a){ return a.indexOf(v)===i; });
   if(!syms.length){ S.holdSig = {}; return; }
   var tf = S.tf;
-  var jobs = syms.map(function(sym){
-    return fetchTimeout("https://api.binance.com/api/v3/klines?symbol="+sym+"USDT&interval="+tf+"&limit=120", 10000)
-      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
-      .then(function(j){
-        if(!Array.isArray(j)||j.length<60) throw 0;
-        var k = core(j.map(function(x){ return parseFloat(x[4]); }));
-        return {sym:sym, total:k.total};
-      })
-      .catch(function(){ return null; });
-  });
-  Promise.all(jobs).then(function(res){
+  var o = {}, j = 0;
+  (function berikut(){
     if(S.tf !== tf) return;
-    var o = {};
-    res.forEach(function(x){ if(x) o[x.sym] = x.total; });
-    S.holdSig = o;
-    renderPort();
-  });
+    if(j >= syms.length){ S.holdSig = o; renderPort(); return; }
+    var sym = syms[j]; j++;
+    fetchTimeout("https://api.binance.com/api/v3/klines?symbol="+sym+"USDT&interval="+tf+"&limit=120", 12000)
+      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(x){
+        if(!Array.isArray(x)||x.length<60) throw 0;
+        o[sym] = core(x.map(function(y){ return parseFloat(y[4]); })).total;
+      })
+      .catch(function(){})
+      .then(function(){
+        S.holdSig = o; renderPort();
+        setTimeout(berikut, 220);
+      });
+  })();
 }
 
 function labelSinyal(total){
@@ -454,33 +454,49 @@ function labelSinyal(total){
 /* ---------- pemindai semua koin ---------- */
 function scanAll(){
   S.scanning = true; S.scanGagal = false; S.scanProgres = 0; renderScreener();
-  var tf = S.tf, hasil = [], i = 0;
-  var UKURAN = 4;   /* jaringan seluler tidak sanggup 20 permintaan serentak */
+  var tf = S.tf, hasil = [], i = 0, gagal = [];
+  var JEDA = 220;   /* jeda antar permintaan: jaringan seluler berbagi satu alamat IP,
+                       permintaan berombongan sering ditolak server */
 
   function ambilSatu(c){
-    return fetchTimeout("https://api.binance.com/api/v3/klines?symbol="+c.sym+"USDT&interval="+tf+"&limit=120", 9000)
+    return fetchTimeout("https://api.binance.com/api/v3/klines?symbol="+c.sym+"USDT&interval="+tf+"&limit=120", 12000)
       .then(function(r){ if(!r.ok) throw 0; return r.json(); })
       .then(function(j){
         if(!Array.isArray(j)||j.length<60) throw 0;
         var k = core(j.map(function(x){ return parseFloat(x[4]); }));
         return {sym:c.sym, name:c.name, total:k.total, change:k.change,
                 price:k.price, gap:k.gapTren, r:k.r};
-      })
-      .catch(function(){ return null; });
+      });
   }
 
-  function kelompok(){
-    if(S.tf !== tf) return;                 /* pengguna sudah pindah kerangka waktu */
-    if(i >= COINS.length){ selesai(); return; }
-    var grup = COINS.slice(i, i+UKURAN);
-    i += UKURAN;
-    Promise.all(grup.map(ambilSatu)).then(function(res){
+  function berikutnya(){
+    if(S.tf !== tf) return;                      /* pengguna sudah pindah kerangka waktu */
+    if(i >= COINS.length){ ulangYangGagal(); return; }
+    var c = COINS[i]; i++;
+    ambilSatu(c)
+      .then(function(x){ hasil.push(x); }, function(){ gagal.push(c); })
+      .then(function(){
+        if(S.tf !== tf) return;
+        S.scanProgres = i;
+        renderScreener();
+        setTimeout(berikutnya, JEDA);
+      });
+  }
+
+  /* satu kesempatan kedua untuk yang gagal, dengan jeda lebih panjang */
+  function ulangYangGagal(){
+    if(S.tf !== tf) return;
+    if(!gagal.length || hasil.length >= COINS.length - 2){ selesai(); return; }
+    var sisa = gagal.slice(0, 8), j = 0;
+    gagal = [];
+    (function lagi(){
       if(S.tf !== tf) return;
-      res.forEach(function(x){ if(x) hasil.push(x); });
-      S.scanProgres = Math.min(i, COINS.length);
-      renderScreener();
-      kelompok();
-    });
+      if(j >= sisa.length){ selesai(); return; }
+      var c = sisa[j]; j++;
+      ambilSatu(c)
+        .then(function(x){ hasil.push(x); renderScreener(); }, function(){})
+        .then(function(){ setTimeout(lagi, 450); });
+    })();
   }
 
   function selesai(){
@@ -491,7 +507,7 @@ function scanAll(){
     renderScreener();
   }
 
-  kelompok();
+  berikutnya();
 }
 
 function renderScreener(){
