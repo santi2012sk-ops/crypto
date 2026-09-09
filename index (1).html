@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sinyal Kripto</title>
+<style>
+  :root{
+    --bg:#EDEFF2; --panel:#fff; --band:#F5F7FA; --line:#D7DDE5;
+    --ink:#16202B; --muted:#63717F;
+    --up:#126B4E; --upSoft:#E3F1EB;
+    --down:#A3382E; --downSoft:#F7E7E5;
+    --hold:#8A7318; --holdSoft:#F6F1DF;
+    --ma20:#2F7FB5; --ma50:#B87A18;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:15px; line-height:1.5; padding:20px 16px 48px;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+  h1{font-size:24px;font-weight:600;letter-spacing:-.01em;margin:0}
+  h2{font-size:14px;font-weight:600;margin:0 0 12px}
+  p.sub{color:var(--muted);font-size:14px;margin:4px 0 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;margin-bottom:16px}
+  .pad{padding:20px}
+  .muted{color:var(--muted)}
+  .xs{font-size:12px}
+  .sm{font-size:14px}
+  .num{font-variant-numeric:tabular-nums}
+  label span.lab{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+  select,input{
+    width:100%;padding:8px 10px;font-size:14px;font-family:inherit;
+    border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink)
+  }
+  button{
+    font-family:inherit;font-size:14px;padding:7px 12px;border-radius:4px;
+    border:1px solid var(--line);background:#fff;color:var(--muted);cursor:pointer
+  }
+  button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  button.solid{background:var(--ink);color:#fff;border-color:var(--ink)}
+  button.plain{color:var(--ink)}
+  button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ma20);outline-offset:1px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:16px}
+  .grow{flex:1 1 200px;min-width:0}
+  .sep{width:1px;height:24px;background:var(--line);margin:0 4px}
+  .push{margin-left:auto}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .tile{background:var(--band);border-radius:6px;padding:12px}
+  .tile .k{font-size:12px;color:var(--muted)}
+  .tile .v{font-size:14px;font-weight:500;margin-top:4px;font-variant-numeric:tabular-nums}
+  .badge{padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600;flex-shrink:0}
+  .divider{border-top:1px solid var(--line)}
+  .irow{display:flex;gap:16px;align-items:flex-start;padding:16px 20px}
+  .price{font-size:30px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
+  .verdict{border-radius:6px;padding:16px;margin-top:20px}
+  .verdict .vt{font-size:20px;font-weight:600}
+  .track{height:8px;border-radius:999px;background:rgba(0,0,0,.08);position:relative;margin-top:16px}
+  .dot{position:absolute;top:-4px;width:16px;height:16px;margin-left:-8px;border-radius:999px}
+  .ends{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px}
+  .legend{display:flex;gap:16px;font-size:12px;margin-top:8px}
+  .err{background:var(--downSoft);color:var(--down);border-radius:6px;padding:16px;font-size:14px;margin-bottom:16px}
+  .addgrid{display:grid;grid-template-columns:.7fr 1fr 1fr 1.2fr auto;gap:8px;align-items:end}
+  .foot{background:var(--band);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:12px;color:var(--muted)}
+  .foot p{margin:0 0 8px}
+  .foot p:last-child{margin:0}
+  .linkbtn{background:none;border:none;padding:0;color:var(--ma20);font-weight:600;font-size:14px;text-decoration:underline;cursor:pointer}
+  .del{background:none;border:none;padding:0;color:var(--muted);font-size:12px;text-decoration:underline;cursor:pointer;margin-top:4px}
+  .scanwrap{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .scanhead{font-size:12px;font-weight:600;margin-bottom:8px}
+  .scanrow{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;background:var(--band);margin-bottom:6px}
+  .scansym{background:none;border:none;padding:0;font-weight:600;font-size:14px;color:var(--ink);text-decoration:underline;cursor:pointer}
+  .scanscore{font-size:12px;font-weight:600;margin-left:auto;font-variant-numeric:tabular-nums}
+  @media (max-width:560px){ .scanwrap{grid-template-columns:1fr} }
+  svg .grid{stroke:var(--line);stroke-width:1}
+  svg text{font-size:11px;fill:var(--muted)}
+  @media (max-width:560px){
+    .grid4{grid-template-columns:repeat(2,1fr)}
+    .grid3{grid-template-columns:1fr}
+    .addgrid{grid-template-columns:1fr 1fr}
+    .addgrid button{grid-column:1 / -1}
+    .price{font-size:26px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header style="margin-bottom:20px">
+    <h1>Sinyal Kripto</h1>
+    <p class="sub">Indikator teknikal dan catatan portofolio untuk koin yang Anda pantau di Pintu.</p>
+  </header>
+
+  <div class="card pad">
+    <div class="row">
+      <label class="grow">
+        <span class="lab">Koin</span>
+        <select id="coinSel"></select>
+      </label>
+      <label class="grow">
+        <span class="lab">Koin lain, ketik simbolnya</span>
+        <div style="display:flex;gap:8px">
+          <input id="customIn" placeholder="mis. TIA">
+          <button class="solid" id="customBtn" style="flex-shrink:0">Cari</button>
+        </div>
+      </label>
+    </div>
+    <div class="bar" id="tfBar"></div>
+    <div class="bar" style="margin-top:12px">
+      <span class="xs muted">Kurs 1 USD =</span>
+      <input id="rateIn" type="number" class="num xs" style="width:110px;padding:4px 8px">
+      <span class="xs muted">rupiah · <span id="rateSrc">memuat…</span></span>
+    </div>
+  </div>
+
+  <div id="errBox"></div>
+  <div id="screener"></div>
+  <div id="signal"></div>
+
+  <div class="card" id="portCard">
+    <div class="pad">
+      <h2>Portofolio saya</h2>
+      <p class="sub" style="margin-bottom:0">Catat apa yang sudah Anda beli, aplikasi hitung untung ruginya.
+      Semua dalam rupiah, dan tersimpan otomatis di komputer ini.</p>
+      <div id="portTotal"></div>
+    </div>
+    <div id="portRows"></div>
+    <div class="divider" style="background:var(--band);padding:16px 20px">
+      <div class="addgrid">
+        <label><span class="lab">Koin</span><select id="fSym"></select></label>
+        <label><span class="lab">Total belanja (Rp)</span><input id="fTotal" type="number" step="any" class="num" placeholder="2000000"></label>
+        <label><span class="lab">Jumlah koin</span><input id="fQty" type="number" step="any" class="num" placeholder="0.0015"></label>
+        <label><span class="lab">Harga beli / koin (Rp)</span><input id="fPrice" type="number" step="any" class="num" placeholder="1900000000"></label>
+        <button class="solid" id="addBtn">Tambah</button>
+      </div>
+      <label id="lainWrap" style="display:none;margin-top:8px">
+        <span class="lab">Simbol koin lain</span>
+        <input id="fSymLain" placeholder="mis. TIA" style="max-width:220px">
+      </label>
+      <p class="xs" style="margin:8px 0 0">
+        <button id="pasarBtn" class="del" style="color:var(--ma20)">Pakai harga pasar sekarang</button>
+        <span class="muted"> — untuk pembelian yang baru saja dilakukan.</span>
+      </p>
+      <p class="xs muted" style="margin:8px 0 0">Pilih koinnya, lalu isi <strong>Total belanja</strong> saja —
+      dua kotak lain terisi sendiri dari harga pasar saat ini. Kalau pembelian Anda bukan hari ini, ganti
+      Harga beli / koin dengan harga rata-rata dari Pintu; jumlah koinnya ikut menyesuaikan.
+      Hubungannya: total belanja = jumlah koin × harga per koin. Pakai titik untuk desimal.</p>
+      <p class="xs" id="storeNote" style="color:var(--down);margin:8px 0 0"></p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <p>Harga di sini diambil dari pasar global, bukan dari Pintu. Angka di aplikasi Pintu akan sedikit
+    berbeda karena ada selisih harga beli–jual dan kurs rupiah yang mereka pakai sendiri, jadi hitungan
+    untung rugi di atas adalah perkiraan — bukan angka yang akan Anda terima kalau menjual sekarang.</p>
+    <p>Indikator teknikal menggambarkan apa yang <em>sudah</em> terjadi, bukan apa yang akan terjadi, dan
+    sering keliru saat pasar bergerak liar. Ini bukan rekomendasi investasi. Aset kripto sangat fluktuatif
+    dan uang yang ditaruh di sana bisa hilang seluruhnya — keputusan beli atau jual tetap ada di tangan Anda.</p>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+var COINS = [
+  {sym:"BTC",name:"Bitcoin",cg:"bitcoin"},
+  {sym:"ETH",name:"Ethereum",cg:"ethereum"},
+  {sym:"SOL",name:"Solana",cg:"solana"},
+  {sym:"XRP",name:"XRP",cg:"ripple"},
+  {sym:"BNB",name:"BNB",cg:"binancecoin"},
+  {sym:"DOGE",name:"Dogecoin",cg:"dogecoin"},
+  {sym:"ADA",name:"Cardano",cg:"cardano"},
+  {sym:"TRX",name:"TRON",cg:"tron"},
+  {sym:"LINK",name:"Chainlink",cg:"chainlink"},
+  {sym:"AVAX",name:"Avalanche",cg:"avalanche-2"},
+  {sym:"DOT",name:"Polkadot",cg:"polkadot"},
+  {sym:"TON",name:"Toncoin",cg:"the-open-network"},
+  {sym:"SUI",name:"Sui",cg:"sui"},
+  {sym:"NEAR",name:"NEAR",cg:"near"},
+  {sym:"ATOM",name:"Cosmos",cg:"cosmos"},
+  {sym:"LTC",name:"Litecoin",cg:"litecoin"},
+  {sym:"POL",name:"Polygon",cg:"matic-network"},
+  {sym:"ARB",name:"Arbitrum",cg:"arbitrum"},
+  {sym:"SHIB",name:"Shiba Inu",cg:"shiba-inu"},
+  {sym:"PEPE",name:"Pepe",cg:"pepe"}
+];
+var TFS = [{id:"1h",label:"1 jam"},{id:"4h",label:"4 jam"},{id:"1d",label:"Harian"}];
+var KEY = "portofolio-kripto";
+
+/* zona toleransi: selisih terlalu tipis dibaca netral, bukan sinyal */
+var TOL_MA = 0.005;      /* 0,5% jarak antar garis */
+var TOL_MACD = 0.001;    /* 0,1% dari harga */
+var TOL_RANGE = 0.015;   /* rentang minimal 1,5% supaya posisi bermakna */
+
+var S = {
+  coin: COINS[0], tf:"1d", cur:"IDR", rate:16500, rateSrc:"perkiraan",
+  data:null, err:null, loading:true, at:null,
+  holdings:[], spot:{},
+  scan:null, scanning:false, holdSig:{}
+};
+
+/* ---------- penyimpanan ---------- */
+function loadStore(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(raw) S.holdings = JSON.parse(raw) || [];
+  }catch(e){ /* mulai dari kosong */ }
+}
+function saveStore(){
+  try{
+    localStorage.setItem(KEY, JSON.stringify(S.holdings));
+    document.getElementById("storeNote").textContent = "";
+  }catch(e){
+    document.getElementById("storeNote").textContent =
+      "Catatan tidak bisa disimpan di browser ini. Isinya tetap ada sampai halaman ditutup.";
+  }
+}
+
+/* ---------- indikator ---------- */
+function sma(v,p){var o=[],s=0;for(var i=0;i<v.length;i++){s+=v[i];if(i>=p)s-=v[i-p];o.push(i>=p-1?s/p:null);}return o;}
+function ema(v,p){var k=2/(p+1),o=[],prev=v[0];for(var i=0;i<v.length;i++){prev=i===0?v[0]:v[i]*k+prev*(1-k);o.push(prev);}return o;}
+function rsi(v,p){
+  p=p||14; if(v.length<p+1) return null;
+  var g=0,l=0,i,d;
+  for(i=1;i<=p;i++){d=v[i]-v[i-1]; if(d>=0)g+=d; else l-=d;}
+  var ag=g/p, al=l/p;
+  for(i=p+1;i<v.length;i++){d=v[i]-v[i-1];
+    ag=(ag*(p-1)+(d>0?d:0))/p; al=(al*(p-1)+(d<0?-d:0))/p;}
+  if(al===0) return 100;
+  return 100-100/(1+ag/al);
+}
+function macdHist(v){
+  var f=ema(v,12), s=ema(v,26);
+  var line=v.map(function(_,i){return f[i]-s[i];});
+  var sig=ema(line,9), last=line.length-1;
+  return line[last]-sig[last];
+}
+
+/* ---------- pengambilan data ---------- */
+function getKlines(sym,tf){
+  return fetch("https://api.binance.com/api/v3/klines?symbol="+sym+"USDT&interval="+tf+"&limit=220")
+    .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    .then(function(j){
+      if(!Array.isArray(j)||j.length<60) throw 0;
+      return {source:"Binance", daily:tf==="1d",
+        candles:j.map(function(k){return {t:k[0], close:parseFloat(k[4])};})};
+    });
+}
+function getGecko(cg){
+  if(!cg) return Promise.reject(0);
+  return fetch("https://api.coingecko.com/api/v3/coins/"+cg+"/market_chart?vs_currency=usd&days=200&interval=daily")
+    .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    .then(function(j){
+      if(!j.prices||j.prices.length<60) throw 0;
+      return {source:"CoinGecko", daily:true,
+        candles:j.prices.map(function(p){return {t:p[0], close:p[1]};})};
+    });
+}
+function getSpot(syms){
+  if(!syms.length) return Promise.resolve({});
+  var q = encodeURIComponent(JSON.stringify(syms.map(function(s){return s+"USDT";})));
+  return fetch("https://api.binance.com/api/v3/ticker/price?symbols="+q)
+    .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    .then(function(j){
+      var o={};
+      j.forEach(function(x){ o[x.symbol.replace(/USDT$/,"")] = parseFloat(x.price); });
+      return o;
+    });
+}
+function getRate(){
+  return fetch("https://api.frankfurter.app/latest?from=USD&to=IDR")
+    .then(function(r){return r.json();})
+    .then(function(j){ if(!j.rates||!j.rates.IDR) throw 0; return {rate:j.rates.IDR, src:"kurs ECB"}; })
+    .catch(function(){
+      return fetch("https://open.er-api.com/v6/latest/USD")
+        .then(function(r){return r.json();})
+        .then(function(j){ if(!j.rates||!j.rates.IDR) throw 0; return {rate:j.rates.IDR, src:"kurs pasar"}; });
+    });
+}
+
+/* ---------- format ---------- */
+function rp(n,dec){
+  if(n==null||isNaN(n)) return "–";
+  dec = dec||0;
+  return "Rp"+n.toLocaleString("id-ID",{minimumFractionDigits:dec,maximumFractionDigits:dec});
+}
+function fmt(usd){
+  if(usd==null||isNaN(usd)) return "–";
+  if(S.cur==="USD"){
+    var d = usd>=1000?2:usd>=1?3:usd>=0.01?5:8;
+    return "$"+usd.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+  }
+  var n = usd*S.rate;
+  return rp(n, n>=1000?0:n>=10?1:n>=1?2:4);
+}
+function axisLbl(usd){
+  var n = S.cur==="IDR" ? usd*S.rate : usd;
+  var p = S.cur==="IDR" ? "" : "$";
+  if(n>=1e9) return p+(n/1e9).toFixed(1)+" M";
+  if(n>=1e6) return p+(n/1e6).toFixed(1)+" jt";
+  if(n>=1e3) return p+(n/1e3).toFixed(1)+"rb";
+  return p+Number(n.toPrecision(3)).toString();
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+/* ---------- analisis ---------- */
+function core(closes){
+  var n = closes.length, price = closes[n-1], prev = closes[n-2];
+  var m20a = sma(closes,20), m50a = sma(closes,50);
+  var m20 = m20a[n-1], m50 = m50a[n-1];
+  var r = rsi(closes), h = macdHist(closes);
+  var win = closes.slice(-30);
+  var lo = Math.min.apply(null,win), hi = Math.max.apply(null,win);
+  var pos = hi===lo ? 50 : (price-lo)/(hi-lo)*100;
+
+  var gapTren  = (m20-m50)/m50;
+  var gapHarga = (price-m50)/m50;
+  var histRel  = h/price;
+  var lebar    = (hi-lo)/lo;
+
+  var s = {
+    tren:  Math.abs(gapTren)<TOL_MA ? 0 : (gapTren>0?1:-1),
+    harga: Math.abs(gapHarga)<TOL_MA ? 0 : (gapHarga>0?1:-1),
+    rsi:   r==null ? 0 : (r<30?1:(r>70?-1:0)),
+    macd:  Math.abs(histRel)<TOL_MACD ? 0 : (h>0?1:-1),
+    pos:   lebar<TOL_RANGE ? 0 : (pos<25?1:(pos>80?-1:0))
+  };
+  var total = s.tren+s.harga+s.rsi+s.macd+s.pos;
+
+  return {n:n, price:price, change:(price-prev)/prev*100,
+          m20a:m20a, m50a:m50a, m20:m20, m50:m50, r:r, h:h,
+          lo:lo, hi:hi, pos:pos, gapTren:gapTren, gapHarga:gapHarga,
+          histRel:histRel, lebar:lebar, s:s, total:total};
+}
+
+function analyse(){
+  if(!S.data) return null;
+  var closes = S.data.candles.map(function(c){return c.close;});
+  var k = core(closes);
+  var pct = function(x){ return (Math.abs(x)*100).toFixed(2)+"%"; };
+
+  var rows = [
+    { label:"Arah tren",
+      detail:"MA20 "+fmt(k.m20)+" vs MA50 "+fmt(k.m50)+" \u00b7 selisih "+pct(k.gapTren),
+      score: k.s.tren,
+      say: k.s.tren===0
+             ? "Dua garis rata-rata praktis berimpit. Belum ada arah tren yang bisa dibaca."
+           : k.s.tren>0 ? "Rata-rata jangka pendek di atas jangka panjang \u2014 tren sedang naik."
+                        : "Rata-rata jangka pendek di bawah jangka panjang \u2014 tren sedang turun." },
+    { label:"Posisi harga",
+      detail:"Harga "+pct(k.gapHarga)+(k.gapHarga>=0?" di atas":" di bawah")+" MA50",
+      score: k.s.harga,
+      say: k.s.harga===0
+             ? "Harga menempel di garis tren utama, belum condong ke mana pun."
+           : k.s.harga>0 ? "Harga bertahan di atas garis tren utama, biasanya tanda kekuatan."
+                         : "Harga di bawah garis tren utama, biasanya tanda pelemahan." },
+    { label:"RSI (14)", detail: k.r==null?"\u2013":k.r.toFixed(1),
+      score: k.s.rsi,
+      say: k.r==null ? "Data belum cukup."
+           : k.r<30 ? "Jenuh jual \u2014 harga turun cukup dalam, sering jadi area orang mulai masuk."
+           : k.r>70 ? "Jenuh beli \u2014 harga naik cukup jauh, rawan koreksi."
+                    : "Masih di zona wajar, belum ekstrem ke mana pun." },
+    { label:"MACD",
+      detail:"Histogram "+(k.h>=0?"+":"")+k.h.toFixed(4)+" \u00b7 "+pct(k.histRel)+" dari harga",
+      score: k.s.macd,
+      say: k.s.macd===0
+             ? "Momentum nyaris datar, terlalu kecil untuk dibaca sebagai arah."
+           : k.h>0 ? "Momentum sedang menguat ke atas."
+                   : "Momentum sedang melemah ke bawah." },
+    { label:"Posisi dalam 30 periode",
+      detail: k.pos.toFixed(0)+"% dari rentang "+fmt(k.lo)+" \u2013 "+fmt(k.hi)+" (lebar "+pct(k.lebar)+")",
+      score: k.s.pos,
+      say: k.s.pos===0 && k.lebar<TOL_RANGE
+             ? "Rentang 30 periode terakhir terlalu sempit. Harga bergerak mendatar, jadi posisi di dalamnya belum berarti apa-apa."
+           : k.pos<25 ? "Harga dekat batas bawah kisarannya."
+           : k.pos>80 ? "Harga dekat batas atas kisarannya."
+                      : "Harga ada di tengah kisarannya." }
+  ];
+
+  var total = k.total, v;
+  if(total>=3) v={t:"Kondisi bullish",c:"up",n:"Mayoritas indikator condong ke arah beli."};
+  else if(total>=1) v={t:"Sedikit bullish",c:"up",n:"Condong naik, tapi indikatornya belum kompak."};
+  else if(total===0){
+    var aktif = rows.filter(function(x){return x.score!==0;}).length;
+    v = aktif===0
+      ? {t:"Netral",c:"hold",n:"Semua indikator sedang datar. Pasar belum bergerak ke mana-mana."}
+      : {t:"Netral",c:"hold",n:"Sinyal saling bertolak belakang. Biasanya ini waktunya menunggu."};
+  }
+  else if(total>=-2) v={t:"Sedikit bearish",c:"down",n:"Condong turun, tapi indikatornya belum kompak."};
+  else v={t:"Kondisi bearish",c:"down",n:"Mayoritas indikator condong ke arah jual."};
+
+  var slice = S.data.candles.slice(-90);
+  var off = k.n - slice.length;
+  var chart = slice.map(function(c,i){
+    return {t:c.t, p:c.close, a:k.m20a[off+i], b:k.m50a[off+i]};
+  });
+
+  return {price:k.price, change:k.change, m20:k.m20, m50:k.m50,
+          lo:k.lo, hi:k.hi, rows:rows, total:total, v:v, chart:chart};
+}
+
+/* ---------- sinyal untuk koin yang dipegang ---------- */
+function scanHoldings(){
+  var syms = S.holdings.map(function(h){return h.sym;})
+    .filter(function(v,i,a){ return a.indexOf(v)===i; });
+  if(!syms.length){ S.holdSig = {}; return; }
+  var tf = S.tf;
+  var jobs = syms.map(function(sym){
+    return fetch("https://api.binance.com/api/v3/klines?symbol="+sym+"USDT&interval="+tf+"&limit=120")
+      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(j){
+        if(!Array.isArray(j)||j.length<60) throw 0;
+        var k = core(j.map(function(x){ return parseFloat(x[4]); }));
+        return {sym:sym, total:k.total};
+      })
+      .catch(function(){ return null; });
+  });
+  Promise.all(jobs).then(function(res){
+    if(S.tf !== tf) return;
+    var o = {};
+    res.forEach(function(x){ if(x) o[x.sym] = x.total; });
+    S.holdSig = o;
+    renderPort();
+  });
+}
+
+function labelSinyal(total){
+  if(total>=3)  return ["Beli", "up"];
+  if(total>=1)  return ["Condong beli", "up"];
+  if(total===0) return ["Netral", "hold"];
+  if(total>=-2) return ["Condong jual", "down"];
+  return ["Jual", "down"];
+}
+
+/* ---------- pemindai semua koin ---------- */
+function scanAll(){
+  S.scanning = true; S.scanTf = S.tf; renderScreener();
+  var tf = S.tf;
+  var jobs = COINS.map(function(c){
+    return fetch("https://api.binance.com/api/v3/klines?symbol="+c.sym+"USDT&interval="+tf+"&limit=120")
+      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(j){
+        if(!Array.isArray(j)||j.length<60) throw 0;
+        var closes = j.map(function(k){ return parseFloat(k[4]); });
+        var k = core(closes);
+        return {sym:c.sym, name:c.name, total:k.total, change:k.change,
+                price:k.price, gap:k.gapTren, r:k.r};
+      })
+      .catch(function(){ return null; });
+  });
+  Promise.all(jobs).then(function(res){
+    if(S.tf !== tf) return;               /* pengguna sudah pindah kerangka waktu */
+    S.scan = res.filter(Boolean);
+    S.scanning = false;
+    renderScreener();
+  });
+}
+
+function renderScreener(){
+  var box = document.getElementById("screener");
+  var tfLabel = (TFS.filter(function(t){return t.id===S.tf;})[0]||{}).label || S.tf;
+
+  if(S.scanning){
+    box.innerHTML = '<div class="card pad"><h2>Yang sedang bergerak</h2>'+
+      '<p class="sm muted" style="margin:0">Memindai '+COINS.length+' koin di kerangka waktu '+tfLabel.toLowerCase()+'\u2026</p></div>';
+    return;
+  }
+  if(!S.scan || !S.scan.length){ box.innerHTML = ""; return; }
+
+  /* diurutkan dari jarak MA20 terhadap MA50: ukuran arah dan kekuatan tren */
+  var urut = S.scan.slice().sort(function(a,b){ return b.gap-a.gap; });
+  var naik = urut.slice(0,3);
+  var turun = urut.slice(-3).reverse();
+
+  function list(arr){
+    var h = "";
+    arr.forEach(function(x){
+      var c = x.gap>TOL_MA ? "up" : (x.gap<-TOL_MA ? "down" : "hold");
+      h += '<div class="scanrow">';
+      h +=   '<button class="scansym" data-scan="'+esc(x.sym)+'">'+esc(x.sym)+'</button>';
+      h +=   '<span class="xs muted num">'+(x.change>=0?"+":"")+x.change.toFixed(2)+'%</span>';
+      h +=   '<span class="scanscore" style="color:var(--'+c+')">'+
+               (x.gap>=0?"+":"\u2212")+(Math.abs(x.gap)*100).toFixed(1)+'%</span>';
+      h += '</div>';
+    });
+    return h;
+  }
+
+  var h = '<div class="card pad"><h2>Yang sedang bergerak</h2>';
+  h += '<p class="sm muted" style="margin:0 0 16px">'+COINS.length+' koin diurutkan dari kekuatan trennya, '+
+       'diukur di kerangka waktu '+tfLabel.toLowerCase()+'. Ganti kerangka waktunya di atas, daftar ini ikut berubah.</p>';
+  /* judul mengikuti kenyataan: kalau semua koin naik, yang di kanan bukan "tren turun" */
+  var adaNaik  = naik[0]  && naik[0].gap  >  TOL_MA;
+  var adaTurun = turun[0] && turun[0].gap < -TOL_MA;
+  var judulKiri  = adaNaik  ? "Tren naik terkuat"  : "Tren paling kuat";
+  var judulKanan = adaTurun ? "Tren turun terkuat" : "Tren paling lemah";
+  var warnaKiri  = adaNaik  ? "up"   : "muted";
+  var warnaKanan = adaTurun ? "down" : "muted";
+
+  h += '<div class="scanwrap">';
+  h +=   '<div><div class="scanhead" style="color:var(--'+warnaKiri+')">'+judulKiri+'</div>'+list(naik)+'</div>';
+  h +=   '<div><div class="scanhead" style="color:var(--'+warnaKanan+')">'+judulKanan+'</div>'+list(turun)+'</div>';
+  h += '</div>';
+  if(!adaTurun || !adaNaik){
+    h += '<p class="xs muted" style="margin:12px 0 0"><strong>'+
+         (!adaTurun ? "Hampir semua koin sedang naik atau mendatar hari ini, jadi kolom kanan berisi yang paling lemah \u2014 bukan yang turun."
+                    : "Hampir semua koin sedang turun atau mendatar hari ini, jadi kolom kiri berisi yang paling bertahan \u2014 bukan yang naik.")+
+         '</strong></p>';
+  }
+  h += '<p class="xs muted" style="margin:12px 0 0">Angka berwarna adalah jarak MA20 terhadap MA50 \u2014 makin besar, '+
+       'makin kuat trennya. Angka abu-abu adalah perubahan periode terakhir. Tren kuat bukan berarti koinnya bagus '+
+       'atau layak dibeli sekarang: koin yang sudah lari jauh justru sering paling mahal saat Anda masuk. '+
+       'Klik simbolnya untuk melihat rincian indikatornya.</p>';
+  h += '</div>';
+  box.innerHTML = h;
+
+  box.querySelectorAll("[data-scan]").forEach(function(el){
+    el.onclick = function(){ pickCoin(el.dataset.scan); };
+  });
+}
+
+/* ---------- grafik SVG ---------- */
+function chartSVG(pts){
+  var W=700,H=220,L=76,R=8,T=10,B=22;
+  var xs = function(i){ return L + i*(W-L-R)/(pts.length-1); };
+  var vals=[];
+  pts.forEach(function(d){ vals.push(d.p); if(d.a!=null)vals.push(d.a); if(d.b!=null)vals.push(d.b); });
+  var lo=Math.min.apply(null,vals), hi=Math.max.apply(null,vals);
+  if(hi===lo){hi=lo*1.01; lo=lo*0.99;}
+  var pad=(hi-lo)*0.08; lo-=pad; hi+=pad;
+  var ys = function(v){ return T + (hi-v)/(hi-lo)*(H-T-B); };
+
+  function path(key){
+    var d="",started=false;
+    pts.forEach(function(p,i){
+      var v=p[key];
+      if(v==null){started=false;return;}
+      d += (started?" L ":" M ")+xs(i).toFixed(1)+" "+ys(v).toFixed(1);
+      started=true;
+    });
+    return d.trim();
+  }
+
+  var s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="220" preserveAspectRatio="xMidYMid meet">';
+  for(var g=0;g<=4;g++){
+    var v = lo + (hi-lo)*g/4, y = ys(v);
+    s += '<line class="grid" x1="'+L+'" y1="'+y.toFixed(1)+'" x2="'+(W-R)+'" y2="'+y.toFixed(1)+'"/>';
+    s += '<text x="'+(L-8)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end">'+esc(axisLbl(v))+'</text>';
+  }
+  [0, Math.floor(pts.length/3), Math.floor(pts.length*2/3), pts.length-1].forEach(function(i,k){
+    var dt = new Date(pts[i].t);
+    var lbl = dt.toLocaleDateString("id-ID",{day:"numeric",month:"short"});
+    s += '<text x="'+xs(i).toFixed(1)+'" y="'+(H-4)+'" text-anchor="'+(k===0?"start":(k===3?"end":"middle"))+'">'+esc(lbl)+'</text>';
+  });
+  s += '<path d="'+path("b")+'" fill="none" stroke="var(--ma50)" stroke-width="1.5"/>';
+  s += '<path d="'+path("a")+'" fill="none" stroke="var(--ma20)" stroke-width="1.5"/>';
+  s += '<path d="'+path("p")+'" fill="none" stroke="var(--ink)" stroke-width="2"/>';
+  s += '</svg>';
+  return s;
+}
+
+/* ---------- render ---------- */
+function badge(score){
+  var m = {"1":["Beli","up","upSoft"],"0":["Netral","hold","holdSoft"],"-1":["Jual","down","downSoft"]}[String(score)];
+  return '<span class="badge" style="color:var(--'+m[1]+');background:var(--'+m[2]+')">'+m[0]+'</span>';
+}
+
+function renderControls(){
+  var sel = document.getElementById("coinSel");
+  var known = COINS.some(function(c){return c.sym===S.coin.sym;});
+  var html = known ? "" : '<option value="">'+esc(S.coin.sym)+' (diketik manual)</option>';
+  COINS.forEach(function(c){
+    html += '<option value="'+c.sym+'"'+(c.sym===S.coin.sym?" selected":"")+'>'+c.sym+' — '+esc(c.name)+'</option>';
+  });
+  sel.innerHTML = html;
+
+  var bar = document.getElementById("tfBar");
+  var b = "";
+  TFS.forEach(function(t){ b += '<button data-tf="'+t.id+'" class="'+(S.tf===t.id?"on":"")+'">'+t.label+'</button>'; });
+  b += '<span class="sep"></span>';
+  b += '<button data-cur="IDR" class="'+(S.cur==="IDR"?"on":"")+'">Rupiah</button>';
+  b += '<button data-cur="USD" class="'+(S.cur==="USD"?"on":"")+'">Dolar</button>';
+  b += '<button id="refreshBtn" class="plain push">'+(S.loading?"Memuat…":"Perbarui")+'</button>';
+  bar.innerHTML = b;
+
+  bar.querySelectorAll("[data-tf]").forEach(function(el){
+    el.onclick = function(){ S.tf = el.dataset.tf; loadData(); scanAll(); scanHoldings(); };
+  });
+  bar.querySelectorAll("[data-cur]").forEach(function(el){
+    el.onclick = function(){ S.cur = el.dataset.cur; renderAll(); };
+  });
+  document.getElementById("refreshBtn").onclick = function(){ loadData(); loadSpot(); scanAll(); scanHoldings(); };
+  document.getElementById("rateIn").value = Math.round(S.rate);
+  document.getElementById("rateSrc").textContent = S.rateSrc;
+}
+
+function renderSignal(){
+  var box = document.getElementById("signal");
+  document.getElementById("errBox").innerHTML = S.err ? '<div class="err">'+esc(S.err)+'</div>' : "";
+  var a = analyse();
+  if(!a){ box.innerHTML = ""; return; }
+
+  var h = "";
+  h += '<div class="card pad">';
+  h +=   '<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">';
+  h +=     '<div><div class="sm muted">'+esc(S.coin.name)+' · '+esc(S.coin.sym)+'</div>';
+  h +=     '<div class="price">'+fmt(a.price)+'</div></div>';
+  h +=     '<div class="num" style="font-size:18px;font-weight:500;color:var(--'+(a.change>=0?"up":"down")+')">'+
+             (a.change>=0?"+":"")+a.change.toFixed(2)+'%</div>';
+  h +=   '</div>';
+  h +=   '<div class="verdict" style="background:var(--'+a.v.c+'Soft)">';
+  h +=     '<div class="vt" style="color:var(--'+a.v.c+')">'+a.v.t+'</div>';
+  h +=     '<div class="sm" style="margin-top:4px">'+a.v.n+'</div>';
+  h +=     '<div class="track"><div class="dot" style="left:'+((a.total+5)/10*100)+'%;background:var(--'+a.v.c+')"></div></div>';
+  h +=     '<div class="ends"><span>Semua jual</span><span>Skor '+(a.total>0?"+":"")+a.total+' dari 5</span><span>Semua beli</span></div>';
+  h +=   '</div>';
+  h += '</div>';
+
+  h += '<div class="card pad"><h2>Pergerakan harga</h2>'+chartSVG(a.chart);
+  h += '<div class="legend"><span style="color:var(--ink)">— Harga</span>'+
+       '<span style="color:var(--ma20)">— MA20</span>'+
+       '<span style="color:var(--ma50)">— MA50</span></div></div>';
+
+  h += '<div class="card"><h2 style="padding:20px 20px 12px;margin:0">Kata tiap indikator</h2>';
+  a.rows.forEach(function(r){
+    h += '<div class="irow divider"><div style="flex:1;min-width:0">';
+    h +=   '<div style="display:flex;flex-wrap:wrap;gap:0 8px;align-items:baseline">';
+    h +=     '<span class="sm" style="font-weight:500">'+esc(r.label)+'</span>';
+    h +=     '<span class="xs muted num">'+esc(r.detail)+'</span></div>';
+    h +=   '<p class="sm muted" style="margin:4px 0 0">'+esc(r.say)+'</p>';
+    h += '</div>'+badge(r.score)+'</div>';
+  });
+  h += '</div>';
+
+  h += '<div class="card pad"><h2>Level yang bisa dipantau</h2><div class="grid4">';
+  [["Terendah 30 periode",a.lo],["MA50",a.m50],["MA20",a.m20],["Tertinggi 30 periode",a.hi]].forEach(function(x){
+    h += '<div class="tile"><div class="k">'+x[0]+'</div><div class="v">'+fmt(x[1])+'</div></div>';
+  });
+  h += '</div><p class="sm muted" style="margin:12px 0 0">MA50 sering dipakai sebagai batas tren: harga bertahan '+
+       'di atasnya dianggap masih sehat, jatuh di bawahnya jadi tanda hati-hati. Level tertinggi dan terendah '+
+       '30 periode adalah titik-titik di mana harga sebelumnya sempat berbalik.</p></div>';
+
+  h += '<p class="xs muted" style="margin:0 0 16px">Data harga: '+esc(S.data.source)+' (pasar global, '+
+       (S.data.daily?"harian":S.tf)+')'+(S.at?" · diperbarui "+S.at.toLocaleTimeString("id-ID"):"")+'.</p>';
+
+  box.innerHTML = h;
+}
+
+function renderPort(){
+  var rows = S.holdings.map(function(x){
+    var now = S.spot[x.sym]!=null ? S.spot[x.sym]*S.rate : null;
+    var modal = x.qty*x.price;
+    var nilai = now==null ? null : x.qty*now;
+    return {id:x.id, sym:x.sym, qty:x.qty, price:x.price, now:now, modal:modal, nilai:nilai,
+            pl: nilai==null?null:nilai-modal,
+            pct: (nilai==null||modal===0)?null:(nilai-modal)/modal*100};
+  });
+  var modal = rows.reduce(function(a,b){return a+b.modal;},0);
+  var any = rows.some(function(r){return r.nilai!=null;});
+  var nilai = any ? rows.reduce(function(a,b){return a+(b.nilai||0);},0) : null;
+  var pl = nilai==null?null:nilai-modal;
+  var pct = (nilai==null||modal===0)?null:(nilai-modal)/modal*100;
+
+  var t = "";
+  if(rows.length){
+    t += '<div class="grid3" style="margin-top:16px">';
+    t += '<div class="tile"><div class="k">Modal</div><div class="v">'+rp(modal)+'</div></div>';
+    t += '<div class="tile"><div class="k">Nilai sekarang</div><div class="v">'+rp(nilai)+'</div></div>';
+    t += '<div class="tile" style="background:var(--'+(pl==null?"band":(pl>=0?"upSoft":"downSoft"))+')">'+
+         '<div class="k">Untung / rugi</div><div class="v" style="color:var(--'+(pl==null?"ink":(pl>=0?"up":"down"))+')">'+
+         (pl==null?"–":(pl>=0?"+":"−")+rp(Math.abs(pl))+" ("+(pct>=0?"+":"")+pct.toFixed(1)+"%)")+'</div></div>';
+    t += '</div>';
+  }
+  document.getElementById("portTotal").innerHTML = t;
+
+  var r = "";
+  rows.forEach(function(x){
+    r += '<div class="divider" style="padding:16px 20px;display:flex;gap:12px;align-items:flex-start">';
+    r +=   '<div style="flex:1;min-width:0">';
+    r +=     '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:baseline">';
+    r +=       '<button class="linkbtn" data-pick="'+esc(x.sym)+'">'+esc(x.sym)+'</button>';
+    if(S.holdSig[x.sym]!==undefined){
+      var sg = labelSinyal(S.holdSig[x.sym]);
+      r +=     '<span class="badge" style="color:var(--'+sg[1]+');background:var(--'+sg[1]+'Soft)">'+
+                 sg[0]+' '+(S.holdSig[x.sym]>0?'+':'')+S.holdSig[x.sym]+'</span>';
+    }
+    r +=       '<span class="xs muted num">'+x.qty+' koin · beli rata-rata '+rp(x.price, x.price<100?2:0)+'</span></div>';
+    r +=     '<div class="xs muted num" style="margin-top:4px">Modal '+rp(x.modal)+' → sekarang '+rp(x.nilai)+
+             (x.now!=null ? ' · harga '+rp(x.now, x.now<100?2:0)+' per koin' : '')+'</div>';
+    r +=   '</div>';
+    r +=   '<div style="text-align:right;flex-shrink:0">';
+    r +=     '<div class="num" style="font-weight:600;font-size:14px;color:var(--'+(x.pl==null?"muted":(x.pl>=0?"up":"down"))+')">'+
+               (x.pl==null?"–":(x.pl>=0?"+":"−")+rp(Math.abs(x.pl)))+'</div>';
+    r +=     '<div class="xs muted num">'+(x.pct==null?"":(x.pct>=0?"+":"")+x.pct.toFixed(1)+"%")+'</div>';
+    r +=     '<button class="del" data-del="'+x.id+'">Hapus</button>';
+    r +=   '</div></div>';
+  });
+  var box = document.getElementById("portRows");
+  box.innerHTML = r;
+  box.querySelectorAll("[data-del]").forEach(function(el){
+    el.onclick = function(){
+      S.holdings = S.holdings.filter(function(h){ return String(h.id)!==el.dataset.del; });
+      saveStore(); renderPort(); loadSpot(); scanHoldings(); scanHoldings();
+    };
+  });
+  box.querySelectorAll("[data-pick]").forEach(function(el){
+    el.onclick = function(){ pickCoin(el.dataset.pick); };
+  });
+}
+
+function renderAll(){ renderControls(); renderScreener(); renderSignal(); renderPort(); }
+
+/* ---------- aksi ---------- */
+function pickCoin(sym){
+  var f = COINS.filter(function(c){return c.sym===sym;})[0];
+  S.coin = f || {sym:sym, name:sym, cg:null};
+  loadData();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function loadData(){
+  S.loading = true; S.err = null; renderControls();
+  getKlines(S.coin.sym, S.tf)
+    .catch(function(){ return getGecko(S.coin.cg); })
+    .then(function(res){ S.data = res; S.at = new Date(); })
+    .catch(function(){
+      S.data = null;
+      S.err = "Data untuk "+S.coin.sym+" tidak ditemukan. Cek lagi simbolnya, atau pilih dari daftar. "+
+              "Kalau semua koin gagal, kemungkinan koneksi internet sedang bermasalah.";
+    })
+    .then(function(){ S.loading = false; renderAll(); });
+}
+
+function loadSpot(){
+  var syms = S.holdings.map(function(h){return h.sym;})
+    .filter(function(v,i,a){return a.indexOf(v)===i;});
+  if(!syms.length){ S.spot={}; renderPort(); return; }
+  getSpot(syms).then(function(o){ S.spot = o; renderPort(); }).catch(function(){});
+}
+
+function symDipilih(){
+  var sel = document.getElementById("fSym").value;
+  if(sel === "__lain") return document.getElementById("fSymLain").value.trim().toUpperCase();
+  return sel;
+}
+
+function isiDaftarKoin(){
+  var sel = document.getElementById("fSym");
+  var h = "";
+  COINS.forEach(function(c){ h += '<option value="'+c.sym+'">'+c.sym+' \u2014 '+esc(c.name)+'</option>'; });
+  h += '<option value="__lain">Koin lain\u2026</option>';
+  sel.innerHTML = h;
+}
+
+/* harga pasar koin terpilih dipasang otomatis, supaya cukup isi total belanja */
+function pasangHargaPasar(diam){
+  var sym = symDipilih();
+  var note = document.getElementById("storeNote");
+  if(!sym){ if(!diam) note.textContent = "Pilih dulu koinnya."; return; }
+  if(!diam) note.textContent = "Mengambil harga " + sym + "\u2026";
+  getSpot([sym]).then(function(o){
+    if(o[sym]==null) throw 0;
+    S.spot[sym] = o[sym];
+    setNum("fPrice", o[sym]*S.rate, 2);
+    hitungOtomatis("price");
+    note.textContent = "Harga pasar " + sym + " sekarang " + rp(o[sym]*S.rate) +
+      " per koin. Ganti angkanya kalau Anda membelinya di harga lain.";
+  }).catch(function(){
+    if(!diam) note.textContent = "Harga " + sym + " tidak bisa diambil. Cek simbolnya atau isi manual.";
+  });
+}
+
+/* isi dua kotak, kotak ketiga dihitung sendiri */
+function num(id){ var v = parseFloat(document.getElementById(id).value); return v>0 ? v : null; }
+function setNum(id, v, dec){
+  var el = document.getElementById(id);
+  el.value = v==null ? "" : parseFloat(v.toFixed(dec)).toString();
+}
+function hitungOtomatis(diubah){
+  var total = num("fTotal"), qty = num("fQty"), price = num("fPrice");
+  if(diubah==="total"){
+    if(price) setNum("fQty", total/price, 8);
+    else if(qty) setNum("fPrice", total/qty, 2);
+  } else if(diubah==="qty"){
+    if(price) setNum("fTotal", qty*price, 2);
+    else if(total) setNum("fPrice", total/qty, 2);
+  } else {
+    if(qty) setNum("fTotal", qty*price, 2);
+    else if(total) setNum("fQty", total/price, 8);
+  }
+}
+
+function addHolding(){
+  var sym = symDipilih();
+  var qty = num("fQty"), price = num("fPrice");
+  var note = document.getElementById("storeNote");
+  if(!sym){ note.textContent = "Pilih dulu koinnya."; return; }
+  if(!qty || !price){
+    var total = num("fTotal");
+    note.textContent = total
+      ? "Total belanja sudah terisi. Tambahkan jumlah koin dari Pintu, atau tekan \u201cPakai harga pasar sekarang\u201d kalau pembeliannya baru saja."
+      : "Isi dua dari tiga kotak angka: total belanja, jumlah koin, atau harga per koin.";
+    return;
+  }
+  /* harga pasar koin ini mungkin belum pernah diambil \u2014 ambil dulu supaya penjaga bisa bekerja */
+  if(S.spot[sym]==null){
+    note.textContent = "Memeriksa harga pasar " + sym + "\u2026";
+    getSpot([sym])
+      .then(function(o){ if(o[sym]!=null) S.spot[sym] = o[sym]; })
+      .catch(function(){})
+      .then(function(){ simpanHolding(sym, qty, price); });
+    return;
+  }
+  simpanHolding(sym, qty, price);
+}
+
+function simpanHolding(sym, qty, price){
+  var note = document.getElementById("storeNote");
+  var pasar = S.spot[sym]!=null ? S.spot[sym]*S.rate : null;
+
+  if(pasar && (price < pasar/20 || price > pasar*20)){
+    note.textContent = "Harga per koin yang Anda isi ("+rp(price)+") jauh sekali dari harga pasar sekarang ("+
+      rp(pasar)+"). Kemungkinan yang Anda maksud adalah total belanja \u2014 isi di kotak Total belanja, "+
+      "biarkan harga per koin dihitung sendiri. Kalau memang benar segitu, tekan Tambah sekali lagi.";
+    if(S.wasPeringatan !== sym+":"+price){ S.wasPeringatan = sym+":"+price; return; }
+  }
+  if(pasar==null){
+    note.textContent = "Harga pasar "+sym+" tidak bisa diambil, jadi isian Anda tidak sempat diperiksa. "+
+      "Pastikan sendiri angkanya benar.";
+  } else {
+    note.textContent = "";
+  }
+  S.wasPeringatan = null;
+  S.holdings.push({id:Date.now(), sym:sym, qty:qty, price:price});
+  saveStore();
+  document.getElementById("fQty").value = "";
+  document.getElementById("fPrice").value = "";
+  document.getElementById("fTotal").value = "";
+  renderPort(); loadSpot(); scanHoldings();
+}
+
+/* ---------- pasang ---------- */
+document.getElementById("coinSel").onchange = function(){
+  if(this.value) pickCoin(this.value);
+};
+document.getElementById("customBtn").onclick = function(){
+  var v = document.getElementById("customIn").value.trim().toUpperCase();
+  if(v){ document.getElementById("customIn").value=""; pickCoin(v); }
+};
+document.getElementById("customIn").onkeydown = function(e){
+  if(e.key==="Enter") document.getElementById("customBtn").click();
+};
+document.getElementById("rateIn").oninput = function(){
+  S.rate = Number(this.value)||0; S.rateSrc = "diatur manual";
+  document.getElementById("rateSrc").textContent = S.rateSrc;
+  renderSignal(); renderPort();
+};
+isiDaftarKoin();
+document.getElementById("fSym").onchange = function(){
+  document.getElementById("lainWrap").style.display = this.value==="__lain" ? "block" : "none";
+  if(this.value!=="__lain") pasangHargaPasar(false);
+};
+document.getElementById("fSymLain").oninput = function(){ this.value = this.value.toUpperCase(); };
+document.getElementById("fSymLain").onblur = function(){ if(this.value.trim()) pasangHargaPasar(false); };
+document.getElementById("pasarBtn").onclick = function(){ pasangHargaPasar(false); };
+document.getElementById("addBtn").onclick = addHolding;
+document.getElementById("fTotal").oninput = function(){ hitungOtomatis("total"); };
+document.getElementById("fQty").oninput   = function(){ hitungOtomatis("qty"); };
+document.getElementById("fPrice").oninput = function(){ hitungOtomatis("price"); };
+["fTotal","fQty","fPrice"].forEach(function(id){
+  document.getElementById(id).onkeydown = function(e){ if(e.key==="Enter") addHolding(); };
+});
+
+loadStore();
+renderAll();
+loadData();
+loadSpot();
+scanAll();
+scanHoldings();
+pasangHargaPasar(true);
+getRate().then(function(r){
+  S.rate = r.rate; S.rateSrc = r.src;
+  document.getElementById("rateIn").value = Math.round(r.rate);
+  document.getElementById("rateSrc").textContent = r.src;
+  renderSignal(); renderPort();
+}).catch(function(){});
+</script>
+</body>
+</html>
